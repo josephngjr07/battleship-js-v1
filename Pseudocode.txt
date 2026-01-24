@@ -1,0 +1,22 @@
+Unit 1 - Project
+
+Battleship
+
+1. Populate the Gameboards / Initial Game State
+1.5 Create Ship Options (to choose)
+- Rotating the ships (flip function)
+2. Create ships with different sizes
+- Function to randomise the ships (for Computer) w/ Overflow and Overlap checks
+- Placing the ships (drag and drop or click)
+- Player shooting function with sunk ships and hit/miss
+- Message of Hit/Miss / Ship sunk
+- If all ship sunk, declare winner
+- Player turn switch
+- Computer shooting AI generated Random hit
+- Continue to be your turn if Hit (Optional)
+- Reset button
+
+
+- AI Hit nearby squares if Hit
+- If Ship sinks, decrease the amount of ships left on the side
+

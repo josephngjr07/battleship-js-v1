@@ -1,0 +1,82 @@
+/* Using a Google Font (e.g., 'Stencil' or 'Roboto Condensed') */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap');
+
+body {
+    /* Military style header */
+    font-family: 'ITC Machine', 'Impact', sans-serif; 
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 20px; 
+}
+
+#main-boards {
+    display: flex;
+    justify-content: space-between;
+}
+
+.game-board {
+    width: 300px;
+    height: 300px;
+    border: 1px solid black;
+    display: flex; 
+    flex-wrap: wrap;
+    
+}
+
+#player {
+    background-color: rgb(4, 4, 87);
+}
+
+#computer {
+    background-color: rgb(81, 1, 1)
+}
+
+.square {
+    border: 1px solid black;
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+}
+
+#options-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    background-color: orange;
+    margin: 20px 0px 0px 0px;
+}
+
+#options-container > div {
+    margin: auto;
+}
+
+#destroyer {
+    height: 30px;
+    width: 60px;
+    background-color: aqua;
+}
+
+#submarine {
+    height: 30px;
+    width: 90px;
+    background-color: pink;
+}
+
+#cruiser {
+    height: 30px;
+    width: 90px;
+    background-color: gold;
+}
+
+#battleship {
+    height: 30px;
+    width: 120px;
+    background-color: aquamarine;
+}
+
+#carrier {
+    height: 30px;
+    width: 150px;
+    background-color: rgb(31, 161, 31);
+}
