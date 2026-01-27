@@ -2,6 +2,30 @@ Unit 1 - Project
 
 Battleship
 
+State
+ships (array of plain objects)
+hits (set/array)
+misses
+turn
+
+Logic
+placeShips()
+attack()
+checkSunk()
+checkWin()
+
+
+
+
+
+
+
+
+
+
+
+
+
 1. Populate the Gameboards / Initial Game State
 1.5 Create Ship Options (to choose)
 - Rotating the ships (flip function)
@@ -17,6 +41,5 @@ Battleship
 - Reset button
 
 
-- AI Hit nearby squares if Hit
-- If Ship sinks, decrease the amount of ships left on the side
+
 
