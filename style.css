@@ -51,32 +51,61 @@ body {
     margin: auto;
 }
 
-#destroyer {
-    height: 30px;
-    width: 60px;
+.placed {
     background-color: aqua;
 }
 
-#submarine {
+.destroyer {
+    background-color: aqua;
+}
+
+.destroyer-option {
     height: 30px;
-    width: 90px;
+    width: 60px;
+}
+
+
+.submarine {
     background-color: pink;
 }
 
-#cruiser {
+.submarine-option {
     height: 30px;
     width: 90px;
+}
+
+
+.cruiser {
     background-color: gold;
 }
 
-#battleship {
+.cruiser-option {
     height: 30px;
-    width: 120px;
+    width: 90px;
+}
+
+.battleship {
     background-color: aquamarine;
 }
 
-#carrier {
+.battleship-option {
+    height: 30px;
+    width: 120px;
+}
+
+.carrier {
+    background-color: rgb(31, 161, 31);
+}
+
+.carrier-option {
     height: 30px;
     width: 150px;
-    background-color: rgb(31, 161, 31);
+}
+
+.hit {
+    background-color: red;
+}
+
+.miss {
+    background-color: rgb(149, 148, 148);
 }

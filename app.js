@@ -1,6 +1,9 @@
 const mainBoards = document.querySelector("#main-boards")
+mainBoards.addEventListener('click', handleClick)
 
-width = 10;
+let gameStarted = false
+let totalCols = 10
+let totalRows = 10
 
 //Create game boards
 function createBoards(user) {
@@ -9,33 +12,127 @@ function createBoards(user) {
     gameBoard.id = `${user}`
     mainBoards.append(gameBoard)
 
-    for(let i = 0; i < width * width; i++) {
-        const square = document.createElement('div')
-        square.classList.add('square')
-        square.id = i
-        gameBoard.append(square)
+    for (let row = 0; row < totalRows; row++) {
+        for (let col = 0; col < totalCols; col++) {
+
+            const square = document.createElement('div')
+            square.classList.add('square')
+            square.dataset.row = row
+            square.dataset.col = col
+            gameBoard.append(square)   
+        }
     }
 }
 
-const playerBoard = createBoards("player")
-const computerBoard = createBoards("computer")
+createBoards("player")
+createBoards("computer")
+
+let placingShipIndex = null
+let placingDirection = 'horizontal'
+
+
+function handleClick(e) {
+    if (gameStarted) return;
+    if (!e.target.classList.contains('square')) {
+        return;
+    } 
+    
+    const square = e.target
+    const row = Number(square.dataset.row)
+    const col = Number(square.dataset.col)
+
+    const boardId = square.parentElement.id
+    if (boardId === 'player') {
+        if (placingShipIndex === null) {
+            console.log('select a ship first') 
+            return;
+        } else {
+        const placedShip = placeShip(placingShipIndex, placingDirection, row, col, playerShipsLocation)
+            if (placedShip) {
+                placingShipIndex = null              
+            }
+        }
+
+    } else if (boardId === 'computer') {
+        //later attack logic
+    }
+    render()
+}
+
+const playerBoard = document.querySelector('#player')
+
+function render() {
+    const gridElements = document.querySelectorAll('#player .square')
+    gridElements.forEach(grid => {
+        grid.classList.remove('destroyer','cruiser','submarine','battleship','carrier')   
+    })
+    
+    playerShips.forEach(ship => {
+        ship.cells.forEach(cell => {
+const playerElSquare = playerBoard.querySelector(`div[data-row='${cell.row}'][data-col='${cell.col}']`)
+            playerElSquare.classList.add(ship.shipname)
+        })
+    })
+}
+
 
 //Create Options container
-
 const optionsContainer = document.querySelector('#options-container')
+optionsContainer.addEventListener('click', handleOptionsClick)
+
+function handleOptionsClick(e) {
+    if (gameStarted) return;
+    if (!e.target.classList.contains('option')) 
+        return;
+    placingShipIndex = shipOptionIndex[e.target.id]
+    console.log(placingShipIndex)
+}
+
+const shipOptionIndex = {
+    destroyer: 0,
+    cruiser: 1,
+    submarine: 2,
+    battleship: 3,
+    carrier: 4
+}
+
+
+//Create Start Button
+const startButton = document.querySelector('#start-button')
+startButton.addEventListener('click', start)
+
+function start() {
+    if (gameStarted) {
+        return
+    }
+
+    if (playerShips.every(ship => {
+            return ship.cells.length === ship.length
+        })) {
+        computerShips.forEach((_ship, index) => {
+        computerGenerateShips(index, computerShipsLocation)}) //generate computer ships
+        gameStarted = true
+        turn = 'player'
+        console.log('game started')
+
+    }
+    
+}
 
 //Create Flip Button
 const flipButton = document.querySelector('#flip-button')
-
 flipButton.addEventListener('click', flip)
 
 let rotationAngle = 0;
 
 function flip() {
+    placingDirection === 'horizontal' ? placingDirection = 'vertical' : placingDirection = 'horizontal'
     const shipOptions = Array.from(optionsContainer.children)
     rotationAngle += 90;
     shipOptions.forEach(ship => ship.style.transform = `rotate(${rotationAngle}deg)`)
 }
+
+
 
 // All these so far I'm just creating DOM elements and manipulating them by styling
 
@@ -45,41 +142,36 @@ const playerShips = [
     {
         shipname: 'destroyer',
         length: 2,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
 
     {   
         shipname: 'cruiser',
         length: 3,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
 
     {
         shipname: 'submarine',
         length: 3,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
     
     {
         shipname: 'battleship',
         length: 4,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
     
     {   
         shipname: 'carrier',
         length: 5,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     }
 ]
 
@@ -87,41 +179,36 @@ const computerShips = [
     {
         shipname: 'destroyer',
         length: 2,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
 
     {   
         shipname: 'cruiser',
         length: 3,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
 
     {
         shipname: 'submarine',
         length: 3,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
     
     {
         shipname: 'battleship',
         length: 4,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     },
     
     {   
         shipname: 'carrier',
         length: 5,
-        cells: [
-
-        ],
+        cells: [],
+        placed: false
     }
 ]
 
@@ -130,15 +217,13 @@ const computerShips = [
 let hits = new Set()
 let misses = new Set()
 let turn = 'player'
-const boardRows = 10
-const boardCols = 10
 let playerShipsLocation = new Set()
 let computerShipsLocation = new Set()
 
 
 //check if it's valid coordinate (helper function)
 function isValidCoord(x, y) {
-   return (x >= 0 && x < boardRows && y >= 0 && y < boardCols)
+   return (x >= 0 && x < totalRows && y >= 0 && y < totalCols)
 }
 
 //check overlap (helper function)
@@ -155,26 +240,25 @@ function convertCell(cell) {
 }
 
 
-function placeShip(shipIndex, direction, startRow, startCol, userShipsLocation) { 
+function placeShip(placingShipIndex, placingDirection, startRow, startCol, userShipsLocation) { 
     let tempShip = []
-    let ship = playerShips[shipIndex] 
+    let ship = playerShips[placingShipIndex] 
     for(let i = 0; i < ship.length; i++) {
-        if(direction === 'horizontal') {
+        if(placingDirection === 'horizontal') {
             let row = startRow
             let col = startCol + i
             if(isValidCoord(row, col)) {
                 tempShip.push({row,col})
-            } else return null;
+            } else return false
 
-        } else if (direction === 'vertical') {
+        } else if (placingDirection === 'vertical') {
             let row = startRow + i
             let col = startCol
             if(isValidCoord(row, col)) {
                 tempShip.push({row,col}) 
-            } else return null;
-        } else return null;
+            } else return false
+        } else return false
     }
-    
     if (!overlap(tempShip, userShipsLocation)) {
         ship.cells = tempShip
 
@@ -182,20 +266,20 @@ function placeShip(shipIndex, direction, startRow, startCol, userShipsLocation) 
             let convertedCell = convertCell(cell)
             userShipsLocation.add(convertedCell)
         })
+        //ship.placed =true
+        return true;
 
     } else {
         console.log("Cannot place ship: Overlap!");
+        return false
     }       
 }
 
-placeShip(3, 'horizontal', 1, 1, playerShipsLocation)
 // console.log(playerShips[3])
 // console.log(playerShipsLocation)
 
 
 
-width = 10
-height = 10
 //generate computer ships
 function computerGenerateShips(shipIndex, userShipsLocation) {
     
@@ -205,8 +289,8 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
         const isHorizontal = randomBoolean   
         const ship = computerShips[shipIndex]
         if(isHorizontal) {
-            const maxStartRow = height - 1
-            const maxStartCol = width - ship.length
+            const maxStartRow = totalRows - 1
+            const maxStartCol = totalCols - ship.length
             const startRow = Math.floor(Math.random() * (maxStartRow + 1))
             const startCol = Math.floor(Math.random() * (maxStartCol + 1))
 
@@ -216,12 +300,12 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
                 //Don't need to validate since will always generate valid, just leaving it here
                 if(isValidCoord(row, col)) {
                     tempShip.push({row,col})
-                } else return null;
+                } else return false;
             }
             
         }  else {
-            const maxStartRow = height - ship.length
-            const maxStartCol = width - 1
+            const maxStartRow = totalRows - ship.length
+            const maxStartCol = totalCols - 1
             const startRow = Math.floor(Math.random() * (maxStartRow + 1))
             const startCol = Math.floor(Math.random() * (maxStartCol + 1))
 
@@ -231,7 +315,7 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
                 //Don't need to validate since will always generate valid, just leaving it here
                 if(isValidCoord(row, col)) {
                     tempShip.push({row,col})
-                } else return null;
+                } else return false;
             }   
         } 
 
@@ -246,7 +330,6 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
         }         
     }       
 }   
-computerGenerateShips(1, computerShipsLocation)
-console.log(computerShipsLocation)
-console.log(computerShips[1])
+
+
 
