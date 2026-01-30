@@ -103,9 +103,9 @@ body {
 }
 
 .hit {
-    background-color: red;
+    background-color: red !important;
 }
 
 .miss {
-    background-color: rgb(149, 148, 148);
+    background-color: rgb(149, 148, 148) !important;
 }

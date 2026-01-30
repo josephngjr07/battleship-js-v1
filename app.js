@@ -2,6 +2,7 @@ const mainBoards = document.querySelector("#main-boards")
 mainBoards.addEventListener('click', handleClick)
 
 let gameStarted = false
+let gameOver = false
 let totalCols = 10
 let totalRows = 10
 
@@ -32,7 +33,7 @@ let placingDirection = 'horizontal'
 
 
 function handleClick(e) {
-    if (gameStarted) return;
+    if (gameOver) return;
     if (!e.target.classList.contains('square')) {
         return;
     } 
@@ -43,6 +44,7 @@ function handleClick(e) {
 
     const boardId = square.parentElement.id
     if (boardId === 'player') {
+        if (gameStarted) return;
         if (placingShipIndex === null) {
             console.log('select a ship first') 
             return;
@@ -54,24 +56,66 @@ function handleClick(e) {
         }
 
     } else if (boardId === 'computer') {
-        //later attack logic
+        if (!gameStarted) return;
+        if (turn !== 'player') return;
+        playerAttack(row, col)
     }
     render()
 }
 
 const playerBoard = document.querySelector('#player')
+const computerBoard = document.querySelector('#computer')
 
 function render() {
+    //clear each render
     const gridElements = document.querySelectorAll('#player .square')
     gridElements.forEach(grid => {
-        grid.classList.remove('destroyer','cruiser','submarine','battleship','carrier')   
+        grid.classList.remove('destroyer','cruiser','submarine','battleship','carrier','hit','miss')   
     })
-    
+    //place ships
     playerShips.forEach(ship => {
         ship.cells.forEach(cell => {
 const playerElSquare = playerBoard.querySelector(`div[data-row='${cell.row}'][data-col='${cell.col}']`)
             playerElSquare.classList.add(ship.shipname)
         })
+    })
+  
+    // Computer hit/miss
+    computerHits.forEach(hit => {
+        const parts = hit.split(',')
+        const row = parts[0]
+        const col = parts[1]
+
+        const hitSquares = playerBoard.querySelector(`div[data-row='${row}'][data-col='${col}']`)
+        hitSquares.classList.add('hit')
+    })
+
+    computerMisses.forEach(miss => {
+        const parts = miss.split(',')
+        const row = parts[0]
+        const col = parts[1]
+
+        const missSquares = playerBoard.querySelector(`div[data-row='${row}'][data-col='${col}']`)
+        missSquares.classList.add('miss')
+    })
+
+        //player hit / miss
+    playerHits.forEach(hit => {
+        const parts = hit.split(',')
+        const row = parts[0]
+        const col = parts[1]
+
+        const hitSquares = computerBoard.querySelector(`div[data-row='${row}'][data-col='${col}']`)
+        hitSquares.classList.add('hit')
+    })
+
+    playerMisses.forEach(miss => {
+        const parts = miss.split(',')
+        const row = parts[0]
+        const col = parts[1]
+
+        const missSquares = computerBoard.querySelector(`div[data-row='${row}'][data-col='${col}']`)
+        missSquares.classList.add('miss')
     })
 }
 
@@ -176,46 +220,49 @@ const playerShips = [
 ]
 
 const computerShips = [
-    {
-        shipname: 'destroyer',
-        length: 2,
-        cells: [],
-        placed: false
-    },
+  {
+    shipname: 'destroyer',
+    length: 2,
+    cells: [],
+    placed: false
+  },
 
-    {   
-        shipname: 'cruiser',
-        length: 3,
-        cells: [],
-        placed: false
-    },
+  {   
+    shipname: 'cruiser',
+    length: 3,
+    cells: [],
+    placed: false
+  },
 
-    {
-        shipname: 'submarine',
-        length: 3,
-        cells: [],
-        placed: false
-    },
-    
-    {
-        shipname: 'battleship',
-        length: 4,
-        cells: [],
-        placed: false
-    },
-    
-    {   
-        shipname: 'carrier',
-        length: 5,
-        cells: [],
-        placed: false
-    }
+  {
+    shipname: 'submarine',
+    length: 3,
+    cells: [],
+    placed: false
+  },
+  
+  {
+    shipname: 'battleship',
+    length: 4,
+    cells: [],
+    placed: false
+  },
+  
+  {   
+    shipname: 'carrier',
+    length: 5,
+    cells: [],
+    placed: false
+  }
 ]
 
 
 
-let hits = new Set()
-let misses = new Set()
+
+let playerHits = new Set()
+let playerMisses = new Set()
+let computerHits = new Set()
+let computerMisses = new Set()
 let turn = 'player'
 let playerShipsLocation = new Set()
 let computerShipsLocation = new Set()
@@ -332,4 +379,68 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
 }   
 
 
+//Attack Phase
+function playerAttack(row, col) {
+    const key = `${row},${col}`
+
+    if (playerHits.has(key) || playerMisses.has(key)) {
+        console.log('already attacked')
+        return;
+    }
+
+    if (computerShipsLocation.has(key)) {
+        playerHits.add(key)
+        console.log('Hit!')
+        checkSunk(key, computerShips, playerHits)
+        checkWin(computerShips, playerHits, 'Player')
+        turn = 'computer'
+
+
+    } else {
+        playerMisses.add(key)
+        console.log('Miss!')
+        turn = 'computeri'
+    }
+}
+
+function computerAttack() {
+    
+}
+
+
+function checkSunk(key, userShips, userHits) {
+
+    userShips.forEach(ship => {
+        let shipCells = ship.cells.map(cell => {
+            return `${cell.row},${cell.col}`    
+        })
+        
+        let isHitShip = shipCells.includes(key)
+
+        let shipSunk = shipCells.every(cell => {
+            return userHits.has(cell)
+        })
+
+        if (isHitShip && shipSunk) {
+            console.log(`Computer's ${ship.shipname} has sunk!`)
+        }
+    }) 
+}
+
+
+function checkWin(userShips, userHits, user) {
+    const everyShipSunk = userShips.every(ship => {
+       return ship.cells.every(cell => {
+        let convertedCell = convertCell(cell)
+        return userHits.has(convertedCell)
+       })
+    })
+
+    if(everyShipSunk) {
+        console.log(`All ships have sunk, ${user} has won!`)
+        gameOver = true
+
+    }
+}
+    
 
