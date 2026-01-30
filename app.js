@@ -190,10 +190,6 @@ function flip() {
     shipOptions.forEach(ship => ship.style.transform = `rotate(${rotationAngle}deg)`)
 }
 
-
-
-// All these so far I'm just creating DOM elements and manipulating them by styling
-
 // Creating Ships (Game state)
 
 const playerShips = [
@@ -305,7 +301,7 @@ function placeShip(placingShipIndex, placingDirection, startRow, startCol, userS
             let convertedCell = convertCell(cell)
             userShipsLocation.add(convertedCell)
         })
-        //ship.placed =true
+
         return true;
 
     } else {
@@ -393,8 +389,7 @@ function playerAttack(row, col) {
         fadeTurn('Computer is thinking...')
         setTimeout(computerAttack, 1000)
     }
-
-
+    
     render();
 }
 
