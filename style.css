@@ -6,7 +6,7 @@ body {
     font-family: 'ITC Machine', 'Impact', sans-serif; 
     font-weight: bold;
     text-transform: uppercase;
-    padding: 20px; 
+    padding: 20px;
 }
 
 #main-boards {
@@ -108,4 +108,22 @@ body {
 
 .miss {
     background-color: rgb(149, 148, 148) !important;
+}
+
+#info {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+#info.fade {
+    opacity: 0;
+}
+
+#turn {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+#turn.fade {
+    opacity: 0;
 }

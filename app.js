@@ -1,10 +1,24 @@
 const mainBoards = document.querySelector("#main-boards")
 mainBoards.addEventListener('click', handleClick)
 
+const infoEl = document.querySelector('#info')
+const turnEl = document.querySelector('#turn')
+
 let gameStarted = false
 let gameOver = false
 let totalCols = 10
 let totalRows = 10
+let turn = 'player'
+
+infoEl.textContent = `Ladies & Gentlemen, Place your Ships!`
+turnEl.textContent = `Loading Weapons...`
+
+let playerHits = new Set()
+let playerMisses = new Set()
+let computerHits = new Set()
+let computerMisses = new Set()
+let playerShipsLocation = new Set()
+let computerShipsLocation = new Set()
 
 //Create game boards
 function createBoards(user) {
@@ -46,7 +60,7 @@ function handleClick(e) {
     if (boardId === 'player') {
         if (gameStarted) return;
         if (placingShipIndex === null) {
-            console.log('select a ship first') 
+            fadeInfo('Please Select a Ship!') 
             return;
         } else {
         const placedShip = placeShip(placingShipIndex, placingDirection, row, col, playerShipsLocation)
@@ -68,7 +82,7 @@ const computerBoard = document.querySelector('#computer')
 
 function render() {
     //clear each render
-    const gridElements = document.querySelectorAll('#player .square')
+    const gridElements = document.querySelectorAll('.square')
     gridElements.forEach(grid => {
         grid.classList.remove('destroyer','cruiser','submarine','battleship','carrier','hit','miss')   
     })
@@ -129,7 +143,6 @@ function handleOptionsClick(e) {
     if (!e.target.classList.contains('option')) 
         return;
     placingShipIndex = shipOptionIndex[e.target.id]
-    console.log(placingShipIndex)
 }
 
 const shipOptionIndex = {
@@ -157,7 +170,8 @@ function start() {
         computerGenerateShips(index, computerShipsLocation)}) //generate computer ships
         gameStarted = true
         turn = 'player'
-        console.log('game started')
+        fadeInfo("Battle is on!")
+        fadeTurn("Your Move, Captain")
 
     }
     
@@ -187,35 +201,30 @@ const playerShips = [
         shipname: 'destroyer',
         length: 2,
         cells: [],
-        placed: false
     },
 
     {   
         shipname: 'cruiser',
         length: 3,
         cells: [],
-        placed: false
     },
 
     {
         shipname: 'submarine',
         length: 3,
         cells: [],
-        placed: false
     },
     
     {
         shipname: 'battleship',
         length: 4,
         cells: [],
-        placed: false
     },
     
     {   
         shipname: 'carrier',
         length: 5,
         cells: [],
-        placed: false
     }
 ]
 
@@ -224,49 +233,32 @@ const computerShips = [
     shipname: 'destroyer',
     length: 2,
     cells: [],
-    placed: false
   },
 
   {   
     shipname: 'cruiser',
     length: 3,
     cells: [],
-    placed: false
   },
 
   {
     shipname: 'submarine',
     length: 3,
     cells: [],
-    placed: false
   },
   
   {
     shipname: 'battleship',
     length: 4,
     cells: [],
-    placed: false
   },
   
   {   
     shipname: 'carrier',
     length: 5,
     cells: [],
-    placed: false
   }
 ]
-
-
-
-
-let playerHits = new Set()
-let playerMisses = new Set()
-let computerHits = new Set()
-let computerMisses = new Set()
-let turn = 'player'
-let playerShipsLocation = new Set()
-let computerShipsLocation = new Set()
-
 
 //check if it's valid coordinate (helper function)
 function isValidCoord(x, y) {
@@ -317,15 +309,10 @@ function placeShip(placingShipIndex, placingDirection, startRow, startCol, userS
         return true;
 
     } else {
-        console.log("Cannot place ship: Overlap!");
+        fadeInfo("Unable to deploy ships here Captain, Overlap!")
         return false
     }       
 }
-
-// console.log(playerShips[3])
-// console.log(playerShipsLocation)
-
-
 
 //generate computer ships
 function computerGenerateShips(shipIndex, userShipsLocation) {
@@ -378,37 +365,76 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
     }       
 }   
 
-
 //Attack Phase
 function playerAttack(row, col) {
+    if (gameOver) return;
+    if (turn !== 'player') return;
+    
     const key = `${row},${col}`
 
     if (playerHits.has(key) || playerMisses.has(key)) {
-        console.log('already attacked')
+        fadeInfo("Position has already been attacked!")
         return;
     }
 
     if (computerShipsLocation.has(key)) {
         playerHits.add(key)
-        console.log('Hit!')
-        checkSunk(key, computerShips, playerHits)
+        fadeInfo('Target Hit!', 2000)
+        checkSunk(key, computerShips, playerHits, 'Computer')
         checkWin(computerShips, playerHits, 'Player')
-        turn = 'computer'
-
 
     } else {
         playerMisses.add(key)
-        console.log('Miss!')
-        turn = 'computeri'
+        fadeInfo('Target Miss!')
     }
+
+    if (!gameOver) {
+        turn = 'computer';
+        fadeTurn('Computer is thinking...')
+        setTimeout(computerAttack, 1000)
+    }
+
+
+    render();
 }
 
 function computerAttack() {
+    if (gameOver) return;
+    if (turn !== 'computer') return;
     
+    while (true) {
+    let randomRow = Math.floor(Math.random() * totalRows)
+    let randomCol = Math.floor(Math.random() * totalCols)
+
+    const key = `${randomRow},${randomCol}`
+
+        if (computerHits.has(key) || computerMisses.has(key)) {
+            continue;
+        }
+
+        if (playerShipsLocation.has(key)) {
+            computerHits.add(key)
+                fadeInfo('Mayday! We have been Hit!!', 2000)
+            checkSunk(key, playerShips, computerHits, 'Player')
+            checkWin(playerShips, computerHits, 'Computer')
+
+        } else {
+            computerMisses.add(key)
+            fadeInfo('Better aim next time!')
+        } 
+
+        if (!gameOver) {
+            turn = 'player';
+          fadeTurn("Your Move, Captain")
+        }
+  
+        render();
+        break;
+    }   
 }
 
 
-function checkSunk(key, userShips, userHits) {
+function checkSunk(key, userShips, userHits, user) {
 
     userShips.forEach(ship => {
         let shipCells = ship.cells.map(cell => {
@@ -422,7 +448,7 @@ function checkSunk(key, userShips, userHits) {
         })
 
         if (isHitShip && shipSunk) {
-            console.log(`Computer's ${ship.shipname} has sunk!`)
+            fadeInfo(`${user}'s ${ship.shipname} has sunk!`)
         }
     }) 
 }
@@ -437,10 +463,55 @@ function checkWin(userShips, userHits, user) {
     })
 
     if(everyShipSunk) {
-        console.log(`All ships have sunk, ${user} has won!`)
+    fadeInfo(`All ships have sunk, ${user} has won!`)
+    fadeTurn(`Congratulations!`)
         gameOver = true
 
     }
 }
     
+const resetButton = document.querySelector('#reset-button')
+resetButton.addEventListener('click', reset)
 
+
+function reset() {
+    gameStarted = false
+    gameOver = false
+    turn = 'player'
+    playerShips.forEach(ship => {
+        ship.cells = []
+    })
+    computerShips.forEach(ship => {
+        ship.cells = []
+    })
+    rotationAngle = 0
+    const shipOptions = Array.from(optionsContainer.children)
+    shipOptions.forEach(ship => ship.style.transform = '')
+    placingShipIndex = null
+    placingDirection = 'horizontal'
+
+    playerHits.clear()
+    playerMisses.clear()
+    computerHits.clear()
+    computerMisses.clear()
+    playerShipsLocation.clear()
+    computerShipsLocation.clear()
+    infoEl.textContent = `Ladies & Gentlemen, Place your Ships!`
+    infoEl.classList.remove('hidden')
+    turnEl.textContent = `Loading Weapons...`
+    turnEl.classList.remove('hidden')
+    render()
+    }
+
+
+  function fadeInfo(message) {
+    infoEl.classList.add('fade')
+    infoEl.textContent = message
+    infoEl.classList.remove('fade')
+  } 
+
+    function fadeTurn(message) {
+    turnEl.classList.add('fade')
+    turnEl.textContent = message
+    turnEl.classList.remove('fade')
+  } 
