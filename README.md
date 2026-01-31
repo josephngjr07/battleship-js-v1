@@ -21,10 +21,6 @@ This made the project a great opportunity to practice JavaScript fundamentals wh
 5. Click on the enemy board to attack.
 6. Sink all enemy ships to win the game.
 
-# Planning Materials
-
-
-
 # Technologies Used
 
 - HTML5
