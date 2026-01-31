@@ -375,7 +375,7 @@ function playerAttack(row, col) {
 
     if (computerShipsLocation.has(key)) {
         playerHits.add(key)
-        fadeInfo('Target Hit!', 2000)
+        fadeInfo('Target Hit!')
         checkSunk(key, computerShips, playerHits, 'Computer')
         checkWin(computerShips, playerHits, 'Player')
 
@@ -409,7 +409,7 @@ function computerAttack() {
 
         if (playerShipsLocation.has(key)) {
             computerHits.add(key)
-                fadeInfo('Mayday! We have been Hit!!', 2000)
+                fadeInfo('Mayday! We have been Hit!!')
             checkSunk(key, playerShips, computerHits, 'Player')
             checkWin(playerShips, computerHits, 'Computer')
 
