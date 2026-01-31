@@ -1,4 +1,4 @@
-Battleship
+# Battleship!
 
 Battleship is a browser-based implementation of the classic naval strategy game.
 Players place their ships on a grid and take turns attacking the enemy board, aiming to sink all opposing ships before their own fleet is destroyed.
@@ -8,7 +8,9 @@ This made the project a great opportunity to practice JavaScript fundamentals wh
 
 - Play the Game
 
-Play Battleship Here
+<img width="864" height="714" alt="Screenshot 2026-01-31 at 7 36 52 AM" src="https://github.com/user-attachments/assets/7ebb8649-3891-4d8e-87ef-f563563f705e" />
+
+# Play Battleship Here
 
 - How to Play
 
@@ -19,11 +21,11 @@ Play Battleship Here
 5. Click on the enemy board to attack.
 6. Sink all enemy ships to win the game.
 
-Planning Materials
+# Planning Materials
 
 
 
-Technologies Used
+# Technologies Used
 
 - HTML5
 - CSS (Flexbox)
@@ -33,7 +35,7 @@ Technologies Used
 Attributions
 Google Fonts: https://fonts.google.com/
 
-Next Steps
+# Next Steps
 
 Planned future enhancements include:
 
