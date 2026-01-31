@@ -9,6 +9,8 @@ let gameOver = false
 let totalCols = 10
 let totalRows = 10
 let turn = 'player'
+let placingShipIndex = null
+let placingDirection = 'horizontal'
 
 infoEl.textContent = `Ladies & Gentlemen, Place your Ships!`
 turnEl.textContent = `Loading Weapons...`
@@ -42,8 +44,7 @@ function createBoards(user) {
 createBoards("player")
 createBoards("computer")
 
-let placingShipIndex = null
-let placingDirection = 'horizontal'
+
 
 
 function handleClick(e) {
@@ -332,7 +333,7 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
                     tempShip.push({row,col})
                 } else return false;
             }
-            
+            //vertical placement
         }  else {
             const maxStartRow = totalRows - ship.length
             const maxStartCol = totalCols - 1
@@ -409,7 +410,7 @@ function computerAttack() {
 
         if (playerShipsLocation.has(key)) {
             computerHits.add(key)
-                fadeInfo('Mayday! We have been Hit!!')
+            fadeInfo('Mayday! We have been Hit!!')
             checkSunk(key, playerShips, computerHits, 'Player')
             checkWin(playerShips, computerHits, 'Computer')
 
