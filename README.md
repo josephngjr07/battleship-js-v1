@@ -1,4 +1,4 @@
-<img width="864" height="714" alt="Screenshot 2026-01-31 at 7 36 52 AM" src="https://github.com/user-attachments/assets/95564075-26a8-42e8-82ad-8207ba809550" /># Battleship
+# Battleship!
 
 Battleship is a browser-based implementation of the classic naval strategy game.
 Players place their ships on a grid and take turns attacking the enemy board, aiming to sink all opposing ships before their own fleet is destroyed.
