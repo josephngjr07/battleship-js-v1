@@ -4,16 +4,13 @@ mainBoards.addEventListener('click', handleClick)
 const infoEl = document.querySelector('#info')
 const turnEl = document.querySelector('#turn')
 
-let gameStarted = false
-let gameOver = false
+
 let totalCols = 10
 let totalRows = 10
-let turn = 'player'
+
 let placingShipIndex = null
 let placingDirection = 'horizontal'
 
-infoEl.textContent = `Ladies & Gentlemen, Place your Ships!`
-turnEl.textContent = `Loading Weapons...`
 
 let playerHits = new Set()
 let playerMisses = new Set()
@@ -44,38 +41,58 @@ function createBoards(user) {
 createBoards("player")
 createBoards("computer")
 
+const GAME_STATES = {
+    SETUP: "setup",
+    PLAYER_TURN: 'playerTurn',
+    COMPUTER_TURN: 'computerTurn',
+    GAME_OVER: 'gameOver',
+}
 
+let gameState = GAME_STATES.SETUP
+infoEl.textContent = `Ladies & Gentlemen, Place your Ships!`
+turnEl.textContent = `Loading Weapons...`
 
 
 function handleClick(e) {
-    if (gameOver) return;
-    if (!e.target.classList.contains('square')) {
-        return;
-    } 
-    
-    const square = e.target
-    const row = Number(square.dataset.row)
-    const col = Number(square.dataset.col)
+    if(!e.target.classList.contains("square")) return;
 
-    const boardId = square.parentElement.id
-    if (boardId === 'player') {
-        if (gameStarted) return;
+    const square = e.target
+    let row = Number(square.dataset.row)
+    let col = Number(square.dataset.col)
+    const boardId = square.parentElement.id // 'player' or 'computer'
+
+    if (gameState === GAME_STATES.GAME_OVER) return;
+    if (gameState === GAME_STATES.SETUP) {
+        if (boardId !== 'player') return
+
         if (placingShipIndex === null) {
-            fadeInfo('Please Select a Ship!') 
+            fadeInfo("Please Select a Ship!")
             return;
-        } else {
-        const placedShip = placeShip(placingShipIndex, placingDirection, row, col, playerShipsLocation)
-            if (placedShip) {
-                placingShipIndex = null              
-            }
         }
 
-    } else if (boardId === 'computer') {
-        if (!gameStarted) return;
-        if (turn !== 'player') return;
-        playerAttack(row, col)
+        const placedShip = placeShip(placingShipIndex, placingDirection, row, col, playerShipsLocation)
+
+        if (placedShip) {
+            placingShipIndex = null
+        }
+
+        render()
+        return
     }
+
+    if (gameState === GAME_STATES.PLAYER_TURN) {
+        if (boardId === 'computer') {
+            playerAttack(row, col)
+        }
+
+        if (gameState === GAME_STATES.PLAYER_TURN && boardId !== 'computer') {
+            fadeInfo('Attack the enemy board!')
+        }
+    }
+
     render()
+    return  
+      
 }
 
 const playerBoard = document.querySelector('#player')
@@ -140,7 +157,7 @@ const optionsContainer = document.querySelector('#options-container')
 optionsContainer.addEventListener('click', handleOptionsClick)
 
 function handleOptionsClick(e) {
-    if (gameStarted) return;
+    if (gameState !== GAME_STATES.SETUP) return;
     if (!e.target.classList.contains('option')) 
         return;
     placingShipIndex = shipOptionIndex[e.target.id]
@@ -160,23 +177,25 @@ const startButton = document.querySelector('#start-button')
 startButton.addEventListener('click', start)
 
 function start() {
-    if (gameStarted) {
-        return
+    if (gameState !== GAME_STATES.SETUP) return
+
+    const allPlaced = playerShips.every(ship => ship.cells.length === ship.length)
+    if (!allPlaced){
+        fadeInfo('Place all ships first!')
+        return;
     }
 
-    if (playerShips.every(ship => {
-            return ship.cells.length === ship.length
-        })) {
-        computerShips.forEach((_ship, index) => {
-        computerGenerateShips(index, computerShipsLocation)}) //generate computer ships
-        gameStarted = true
-        turn = 'player'
-        fadeInfo("Battle is on!")
-        fadeTurn("Your Move, Captain")
+    computerShips.forEach((_ship, index) => {
+        computerGenerateShips(index, computerShipsLocation)
+    })
 
-    }
-    
+    gameState = GAME_STATES.PLAYER_TURN
+    fadeInfo("Battle is on!")
+    fadeTurn("Your Move, Captain")
+    render()
 }
+
+
 
 //Create Flip Button
 const flipButton = document.querySelector('#flip-button')
@@ -185,6 +204,7 @@ flipButton.addEventListener('click', flip)
 let rotationAngle = 0;
 
 function flip() {
+    if (gameState !== GAME_STATES.SETUP) return;
     placingDirection === 'horizontal' ? placingDirection = 'vertical' : placingDirection = 'horizontal'
     const shipOptions = Array.from(optionsContainer.children)
     rotationAngle += 90;
@@ -363,70 +383,74 @@ function computerGenerateShips(shipIndex, userShipsLocation) {
 }   
 
 //Attack Phase
+
 function playerAttack(row, col) {
-    if (gameOver) return;
-    if (turn !== 'player') return;
-    
+    if (gameState !== GAME_STATES.PLAYER_TURN) return
+
     const key = `${row},${col}`
 
     if (playerHits.has(key) || playerMisses.has(key)) {
         fadeInfo("Position has already been attacked!")
-        return;
-    }
-
-    if (computerShipsLocation.has(key)) {
-        playerHits.add(key)
-        fadeInfo('Target Hit!')
-        checkSunk(key, computerShips, playerHits, 'Computer')
-        checkWin(computerShips, playerHits, 'Player')
-
-    } else {
-        playerMisses.add(key)
-        fadeInfo('Target Miss!')
-    }
-
-    if (!gameOver) {
-        turn = 'computer';
-        fadeTurn('Computer is thinking...')
-        setTimeout(computerAttack, 1000)
+        return       
     }
     
-    render();
+    if (computerShipsLocation.has(key)) {
+        playerHits.add(key)
+        fadeInfo("Target Hit! Fire another one!")
+        checkSunk(key, computerShips, playerHits, "Computer")
+        checkWin(computerShips, playerHits, "Player")
+        render()
+        return;
+    
+    } else {
+        playerMisses.add(key)
+        fadeInfo("Target Miss!")
+        render()
+    }
+
+    if (gameState !== GAME_STATES.GAME_OVER) {
+                gameState = GAME_STATES.COMPUTER_TURN
+
+                setTimeout(computerAttack, 1000)
+        }
 }
 
 function computerAttack() {
-    if (gameOver) return;
-    if (turn !== 'computer') return;
-    
+    if (gameState !== GAME_STATES.COMPUTER_TURN) return
+
     while (true) {
-    let randomRow = Math.floor(Math.random() * totalRows)
-    let randomCol = Math.floor(Math.random() * totalCols)
+        let randomRow = Math.floor(Math.random() * totalRows)
+        let randomCol = Math.floor(Math.random() * totalCols)
 
-    const key = `${randomRow},${randomCol}`
+        const key = `${randomRow},${randomCol}`
 
-        if (computerHits.has(key) || computerMisses.has(key)) {
-            continue;
-        }
+        if (computerHits.has(key) || computerMisses.has(key)) continue
 
         if (playerShipsLocation.has(key)) {
-            computerHits.add(key)
-            fadeInfo('Mayday! We have been Hit!!')
-            checkSunk(key, playerShips, computerHits, 'Player')
-            checkWin(playerShips, computerHits, 'Computer')
+        computerHits.add(key)
+        fadeInfo("Mayday! We have been Hit!!")
+        checkSunk(key, playerShips, computerHits, "Player")
+        checkWin(playerShips, computerHits, "Computer")
+        render()
+        if (gameState !== GAME_STATES.GAME_OVER) {
+            fadeTurn("Computer is thinking...")
+            setTimeout(computerAttack, 1000)
+            return;
+        }
 
         } else {
-            computerMisses.add(key)
-            fadeInfo('Better aim next time!')
-        } 
-
-        if (!gameOver) {
-            turn = 'player';
-          fadeTurn("Your Move, Captain")
+        computerMisses.add(key)
+        fadeInfo("Better aim next time!")
         }
-  
-        render();
-        break;
-    }   
+
+        if (gameState !== GAME_STATES.GAME_OVER) {
+            gameState = GAME_STATES.PLAYER_TURN
+            fadeTurn("Your Move, Captain")
+        }
+
+        render()
+        break
+    }
 }
 
 
@@ -449,31 +473,28 @@ function checkSunk(key, userShips, userHits, user) {
     }) 
 }
 
-
 function checkWin(userShips, userHits, user) {
-    const everyShipSunk = userShips.every(ship => {
-       return ship.cells.every(cell => {
-        let convertedCell = convertCell(cell)
-        return userHits.has(convertedCell)
-       })
+  const everyShipSunk = userShips.every(ship => {
+    return ship.cells.every(cell => {
+      let convertedCell = convertCell(cell)
+      return userHits.has(convertedCell)
     })
+  })
 
-    if(everyShipSunk) {
+  if (everyShipSunk) {
     fadeInfo(`All ships have sunk, ${user} has won!`)
     fadeTurn(`Congratulations!`)
-        gameOver = true
-
-    }
+    gameState = GAME_STATES.GAME_OVER
+  }
 }
+
     
 const resetButton = document.querySelector('#reset-button')
 resetButton.addEventListener('click', reset)
 
 
 function reset() {
-    gameStarted = false
-    gameOver = false
-    turn = 'player'
+    gameState = GAME_STATES.SETUP
     playerShips.forEach(ship => {
         ship.cells = []
     })
@@ -511,3 +532,141 @@ function reset() {
     turnEl.textContent = message
     turnEl.classList.remove('fade')
   } 
+//----------GRAVEYARD CODE-----------//
+
+// let turn = 'player'
+// let gameStarted = false
+// let gameOver = false
+
+// function handleClick(e) {
+//     if (gameOver) return;
+//     if (!e.target.classList.contains('square')) {
+//         return;
+//     } 
+    
+//     const square = e.target
+//     const row = Number(square.dataset.row)
+//     const col = Number(square.dataset.col)
+
+//     const boardId = square.parentElement.id
+//     if (boardId === 'player') {
+//         if (gameStarted) return;
+//         if (placingShipIndex === null) {
+//             fadeInfo('Please Select a Ship!') 
+//             return;
+//         } else {
+//         const placedShip = placeShip(placingShipIndex, placingDirection, row, col, playerShipsLocation)
+//             if (placedShip) {
+//                 placingShipIndex = null              
+//             }
+//         }
+
+//     } else if (boardId === 'computer') {
+//         if (!gameStarted) return;
+//         if (turn !== 'player') return;
+//         playerAttack(row, col)
+//     }
+//     render()
+// }
+
+// function start() {
+//     if (gameStarted) {
+//         return
+//     }
+
+//     if (playerShips.every(ship => {
+//             return ship.cells.length === ship.length
+//         })) {
+//         computerShips.forEach((_ship, index) => {
+//         computerGenerateShips(index, computerShipsLocation)}) //generate computer ships
+//         gameStarted = true
+//         turn = 'player'
+//         fadeInfo("Battle is on!")
+//         fadeTurn("Your Move, Captain")
+
+//     }
+    
+// }
+
+// function playerAttack(row, col) {
+//     if (gameOver) return;
+//     if (turn !== 'player') return;
+    
+//     const key = `${row},${col}`
+
+
+//     if (playerHits.has(key) || playerMisses.has(key)) {
+//         fadeInfo("Position has already been attacked!")
+//         return;
+//     }
+
+//     if (computerShipsLocation.has(key)) {
+//         playerHits.add(key)
+//         fadeInfo('Target Hit!')
+//         checkSunk(key, computerShips, playerHits, 'Computer')
+//         checkWin(computerShips, playerHits, 'Player')
+
+//     } else {
+//         playerMisses.add(key)
+//         fadeInfo('Target Miss!')
+//     }
+
+//     if (!gameOver) {
+//         turn = 'computer';
+//         fadeTurn('Computer is thinking...')
+//         setTimeout(computerAttack, 1000)
+//     }
+    
+//     render();
+// }
+
+// function checkWin(userShips, userHits, user) {
+//     const everyShipSunk = userShips.every(ship => {
+//        return ship.cells.every(cell => {
+//         let convertedCell = convertCell(cell)
+//         return userHits.has(convertedCell)
+//        })
+//     })
+
+//     if(everyShipSunk) {
+//     fadeInfo(`All ships have sunk, ${user} has won!`)
+//     fadeTurn(`Congratulations!`)
+//         gameOver = true
+
+//     }
+// }
+
+// function computerAttack() {
+//     if (gameOver) return;
+//     if (turn !== 'computer') return;
+    
+//     while (true) {
+//     let randomRow = Math.floor(Math.random() * totalRows)
+//     let randomCol = Math.floor(Math.random() * totalCols)
+
+//     const key = `${randomRow},${randomCol}`
+
+//         if (computerHits.has(key) || computerMisses.has(key)) {
+//             continue;
+//         }
+
+//         if (playerShipsLocation.has(key)) {
+//             computerHits.add(key)
+//             fadeInfo('Mayday! We have been Hit!!')
+//             checkSunk(key, playerShips, computerHits, 'Player')
+//             checkWin(playerShips, computerHits, 'Computer')
+
+//         } else {
+//             computerMisses.add(key)
+//             fadeInfo('Better aim next time!')
+//         } 
+
+//         if (!gameOver) {
+//             turn = 'player';
+//           fadeTurn("Your Move, Captain")
+//         }
+  
+//         render();
+//         break;
+//     }   
+// }
